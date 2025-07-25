@@ -1,5 +1,7 @@
 import express from 'express';
 import passport from 'passport';
+import dotenv from 'dotenv';
+dotenv.config();
 const router = express.Router();
 
 router.get('/google',
@@ -16,7 +18,9 @@ router.get('/google/callback',
     (req, res) => {
         const { token } = req.user;
 
-        // Redireciona para o frontend Angular, passando o token JWT via query string
+        //const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
+        //res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
+
         res.redirect(`http://localhost:4200/auth/callback?token=${token}`);
     }
 );
@@ -33,5 +37,25 @@ router.get('/google/callback',
     }
 );
 */
+
+router.get('/logout', (req, res) => {
+    // Se usar sessão (exemplo com express-session):
+    if (req.session) {
+        req.session.destroy(err => {
+            if (err) {
+                console.error('Erro ao destruir sessão:', err);
+            }
+            // Redireciona para front-end login
+            res.clearCookie('jwt_token');
+            res.redirect('http://localhost:4200/login');
+            //res.redirect('http://localhost:4200/login');
+        });
+    } else {
+        res.clearCookie('jwt_token');
+        // Se não usa sessão, só redireciona
+        res.redirect('http://localhost:4200/login');
+        //res.redirect('http://localhost:4200/login');
+    }
+});
 
 export default router;

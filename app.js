@@ -8,11 +8,24 @@ import todosRouter from './routes/todos.js';
 import sectionsRouter from './routes/sections.js';
 import authRouter from './routes/auth.js';
 import dotenv from 'dotenv';
+import cors from 'cors';
+
 dotenv.config();
 
 const swaggerDocument = JSON.parse(fs.readFileSync('./swagger/swagger.json'));
 
 const app = express();
+/*
+app.use(cors({
+  origin: 'http://localhost:4200',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+*/
+app.use(cors({
+  origin: '*', // ou defina o IP do celular se quiser limitar
+}));
 
 app.use(express.json());
 app.use('/todos', todosRouter);
@@ -45,6 +58,7 @@ export function authenticateJWT(req, res, next) {
 }
 
 const PORT = process.env.PORT || 3000;
+//app.listen(PORT, '0.0.0.0', () => {
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

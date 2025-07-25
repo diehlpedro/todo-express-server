@@ -1,0 +1,327 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ToDo API with Google OAuth2 Login",
+    "version": "1.0.0",
+    "description": "API to manage ToDo tasks and sections with login via Google OAuth2 and JWT authentication"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "google-id-123" },
+          "email": { "type": "string", "format": "email", "example": "user@example.com" },
+          "name": { "type": "string", "example": "John Doe" }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Authentication failed" }
+        }
+      },
+      "Todo": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "Buy groceries" },
+          "done": { "type": "boolean", "example": false },
+          "description": { "type": ["string", "null"], "example": "Buy milk and eggs" },
+          "depends_on": { "type": ["integer", "null"], "example": null },
+          "section_id": { "type": ["integer", "null"], "example": 2 }
+        },
+        "required": ["id", "title"]
+      },
+      "TodoInput": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Buy groceries" },
+          "done": { "type": "boolean", "example": false },
+          "description": { "type": ["string", "null"], "example": "Buy milk and eggs" },
+          "depends_on": { "type": ["integer", "null"], "example": null },
+          "section_id": { "type": ["integer", "null"], "example": 2 }
+        },
+        "required": ["title"]
+      },
+      "Section": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Home" },
+          "color": { "type": "string", "example": "#FF0000" }
+        },
+        "required": ["id", "name", "color"]
+      },
+      "SectionInput": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Home" },
+          "color": { "type": "string", "example": "#FF0000" }
+        },
+        "required": ["name", "color"]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/google": {
+      "get": {
+        "summary": "Login with Google OAuth2",
+        "description": "Redirect to Google's OAuth2 login page. Cannot be tested directly via Swagger UI.",
+        "responses": {
+          "302": { "description": "Redirect to Google login" }
+        },
+        "security": []
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "summary": "Google OAuth2 callback",
+        "description": "Callback after Google login; returns JWT token.",
+        "responses": {
+          "200": {
+            "description": "JWT token returned on successful login",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/todos": {
+      "get": {
+        "summary": "Get all todos",
+        "responses": {
+          "200": {
+            "description": "List of todos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Todo" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create a new todo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TodoInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Todo created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Todo" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/todos/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "ID of todo",
+          "required": true,
+          "schema": { "type": "integer" }
+        }
+      ],
+      "get": {
+        "summary": "Get todo by ID",
+        "responses": {
+          "200": {
+            "description": "Todo found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Todo" }
+              }
+            }
+          },
+          "404": { "description": "Todo not found" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "summary": "Update todo by ID",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TodoInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Todo updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Todo" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "404": { "description": "Todo not found" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "delete": {
+        "summary": "Delete todo by ID",
+        "responses": {
+          "204": { "description": "Todo deleted" },
+          "404": { "description": "Todo not found" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/sections": {
+      "get": {
+        "summary": "Get all sections",
+        "responses": {
+          "200": {
+            "description": "List of sections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Section" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create a new section",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SectionInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Section created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Section" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/sections/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "ID of section",
+          "required": true,
+          "schema": { "type": "integer" }
+        }
+      ],
+      "get": {
+        "summary": "Get section by ID",
+        "responses": {
+          "200": {
+            "description": "Section found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Section" }
+              }
+            }
+          },
+          "404": { "description": "Section not found" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "summary": "Update section by ID",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SectionInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Section updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Section" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "404": { "description": "Section not found" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "delete": {
+        "summary": "Delete section by ID",
+        "responses": {
+          "204": { "description": "Section deleted" },
+          "404": { "description": "Section not found" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    }
+  }
+}

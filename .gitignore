@@ -1,0 +1,7 @@
+*.env
+
+*.babelrc
+
+node_modules/
+
+other_files_ignore/

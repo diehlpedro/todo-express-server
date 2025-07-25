@@ -26,19 +26,22 @@
           "id": { "type": "string", "example": "google-id-123" },
           "email": { "type": "string", "format": "email", "example": "user@example.com" },
           "name": { "type": "string", "example": "John Doe" }
-        }
+        },
+        "required": ["id", "email", "name"]
       },
       "TokenResponse": {
         "type": "object",
         "properties": {
           "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
-        }
+        },
+        "required": ["token"]
       },
       "ErrorResponse": {
         "type": "object",
         "properties": {
           "message": { "type": "string", "example": "Authentication failed" }
-        }
+        },
+        "required": ["message"]
       },
       "Todo": {
         "type": "object",
@@ -48,9 +51,12 @@
           "done": { "type": "boolean", "example": false },
           "description": { "type": ["string", "null"], "example": "Buy milk and eggs" },
           "depends_on": { "type": ["integer", "null"], "example": null },
-          "section_id": { "type": ["integer", "null"], "example": 2 }
+          "section_id": { "type": ["integer", "null"], "example": 2 },
+          "created_at": { "type": ["string", "null"], "format": "date-time", "example": "2025-07-25T20:00:00Z" },
+          "deadline": { "type": ["string", "null"], "format": "date-time", "example": "2025-07-30T23:59:59Z" },
+          "closed_at": { "type": ["string", "null"], "format": "date-time", "example": "2025-07-26T18:00:00Z" }
         },
-        "required": ["id", "title"]
+        "required": ["id", "title", "done"]
       },
       "TodoInput": {
         "type": "object",
@@ -59,7 +65,8 @@
           "done": { "type": "boolean", "example": false },
           "description": { "type": ["string", "null"], "example": "Buy milk and eggs" },
           "depends_on": { "type": ["integer", "null"], "example": null },
-          "section_id": { "type": ["integer", "null"], "example": 2 }
+          "section_id": { "type": ["integer", "null"], "example": 2 },
+          "deadline": { "type": ["string", "null"], "format": "date-time", "example": "2025-07-30T23:59:59Z" }
         },
         "required": ["title"]
       },
@@ -67,18 +74,16 @@
         "type": "object",
         "properties": {
           "id": { "type": "integer", "example": 1 },
-          "name": { "type": "string", "example": "Home" },
-          "color": { "type": "string", "example": "#FF0000" }
+          "name": { "type": "string", "example": "Home" }
         },
-        "required": ["id", "name", "color"]
+        "required": ["id", "name"]
       },
       "SectionInput": {
         "type": "object",
         "properties": {
-          "name": { "type": "string", "example": "Home" },
-          "color": { "type": "string", "example": "#FF0000" }
+          "name": { "type": "string", "example": "Home" }
         },
-        "required": ["name", "color"]
+        "required": ["name"]
       }
     }
   },
@@ -203,6 +208,44 @@
         "responses": {
           "200": {
             "description": "Todo updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Todo" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "404": { "description": "Todo not found" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "patch": {
+        "summary": "Partially update todo by ID",
+        "description": "Update one or more fields of the todo. No field is required; send only the fields to update.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "Buy groceries" },
+                  "done": { "type": "boolean", "example": false },
+                  "description": { "type": ["string", "null"], "example": "Buy milk and eggs" },
+                  "depends_on": { "type": ["integer", "null"], "example": null },
+                  "section_id": { "type": ["integer", "null"], "example": 2 },
+                  "deadline": { "type": ["string", "null"], "format": "date-time", "example": "2025-07-30T23:59:59Z" },
+                  "closed_at": { "type": ["string", "null"], "format": "date-time", "example": "2025-07-26T18:00:00Z" }
+                },
+                "additionalProperties": false,
+                "minProperties": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Todo partially updated",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Todo" }
